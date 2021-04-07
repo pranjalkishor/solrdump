@@ -11,8 +11,8 @@ import (
 	"net/url"
 	"os"
 	"strings"
-
-	"github.com/sethgrid/pester"
+	"bytes"
+	"github.com/ubccr/kerby/khttp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -29,6 +29,8 @@ var (
 	verbose                     = flag.Bool("verbose", false, "show progress")
 	version                     = flag.Bool("version", false, "show version and exit")
 	skipCertificateVerification = flag.Bool("k", false, "skip certificate verfication")
+	keytab                      = flag.String("keytab", "/root/solr.keytab", "Default Keytab location to use for authentication")
+	principal                   = flag.String("principal", "solr@EXAMPLE.COM", "Default Kerberos principal to use for authentication")
 )
 
 // Response is a SOLR response.
@@ -69,7 +71,6 @@ func main() {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 	*server = PrependSchema(*server)
-
 	v := url.Values{}
 	v.Set("q", *query)
 	v.Set("sort", *sort)
@@ -85,7 +86,20 @@ func main() {
 		if *verbose {
 			log.Println(link)
 		}
-		resp, err := pester.Get(link)
+		payload := []byte(`{"method":""}`)
+		req, err := http.NewRequest(
+			"GET",
+			link,
+			bytes.NewBuffer(payload))
+
+		t := &khttp.Transport{
+			KeyTab: *keytab,
+			Principal: *principal}
+
+		client := &http.Client{Transport: t}
+
+
+		resp, err := client.Do(req)
 		if err != nil {
 			log.Fatalf("http: %s", err)
 		}
