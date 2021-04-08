@@ -12,7 +12,7 @@ import (
 	"os"
 	"strings"
 	"bytes"
-	"github.com/satyenr/kerby"
+	"github.com/pranjalkishor/kerby-1/khttp"
 	log "github.com/sirupsen/logrus"
 )
 
